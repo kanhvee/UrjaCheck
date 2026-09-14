@@ -4,4 +4,4 @@
    Change this if your backend runs on a different host/port.
    ============================================================ */
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "https://urjacheck-backend.onrender.com/api";
