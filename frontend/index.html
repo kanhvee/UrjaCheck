@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrjaCheck — Understand Your Energy Use</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="container">
+    <button class="brand" onclick="showView('landing')" aria-label="UrjaCheck home">
+      <span class="brand-bolt">⚡</span> UrjaCheck
+    </button>
+    <nav class="main-nav" id="mainNav" aria-label="Main navigation">
+      <button data-nav="landing" onclick="showView('landing')">Home</button>
+      <button data-nav="intro" onclick="startAssessment()">Assessment</button>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ===================== LANDING ===================== -->
+  <section class="view active" id="view-landing">
+    <div class="hero container-narrow">
+      <span class="hero-eyebrow">⚡ Community Energy Assessment</span>
+      <h1>Understand Your Energy Use</h1>
+      <p class="lead">Assess your household electricity consumption, discover your major energy-consuming appliances, and compare your usage with a reference level.</p>
+      <button class="btn btn-primary btn-lg" onclick="startAssessment()">Start Energy Assessment →</button>
+      <div class="hero-meta">
+        <span>🕒 3–5 minutes</span>
+        <span>🧾 No electricity bill required</span>
+        <span>🏠 Simple household assessment</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="feature-grid">
+        <div class="feature-card">
+          <span class="icon">⚡</span>
+          <h3>Assess Usage</h3>
+          <p>Calculate estimated energy consumption for your household.</p>
+        </div>
+        <div class="feature-card">
+          <span class="icon">📊</span>
+          <h3>View Insights</h3>
+          <p>Understand which appliances consume the most energy.</p>
+        </div>
+        <div class="feature-card">
+          <span class="icon">🌱</span>
+          <h3>Save Energy</h3>
+          <p>Receive practical, non-judgmental energy-saving suggestions.</p>
+        </div>
+      </div>
+
+      <p class="disclaimer-note">
+        UrjaCheck provides an estimated assessment based on the information entered by the resident. Results are intended for awareness and comparison, not as a substitute for your actual electricity bill.
+      </p>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-top">
+          <div class="brand"><span class="brand-bolt">⚡</span> UrjaCheck</div>
+          <div class="footer-links">
+            <a href="#" onclick="return false;">About</a>
+            <a href="#" onclick="return false;">Privacy</a>
+            <a href="#" onclick="return false;">Contact</a>
+          </div>
+        </div>
+        <p class="footer-note">Community Energy Assessment • For awareness and educational purposes.<br>Estimated values are based on user-provided information and reference assumptions.</p>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ===================== INTRO ===================== -->
+  <section class="view" id="view-intro">
+    <div class="container-narrow assessment-page">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Step 1 of 4</span><span>25%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+      </div>
+      <div class="assessment-header">
+        <h1>Let's understand your household</h1>
+        <p>This assessment takes approximately 3–5 minutes. We'll ask about your household and electrical appliances.</p>
+      </div>
+      <ul class="checklist">
+        <li><span class="tick">✓</span> Household information</li>
+        <li><span class="tick">✓</span> Appliances</li>
+        <li><span class="tick">✓</span> Approximate operating hours</li>
+      </ul>
+      <p class="field-hint">No electricity bill is required.</p>
+      <div class="step-actions single">
+        <button class="btn btn-primary btn-lg" onclick="showView('household')">Continue →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOUSEHOLD DETAILS ===================== -->
+  <section class="view" id="view-household">
+    <div class="container-narrow assessment-page">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Step 2 of 4</span><span>50%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+      </div>
+      <div class="assessment-header">
+        <h1>Tell us about your household</h1>
+      </div>
+
+      <div class="field" id="field-size">
+        <label class="field-label">How many people live in your household?</label>
+        <div class="stepper">
+          <button type="button" aria-label="Decrease household size" onclick="adjustHouseholdSize(-1)">−</button>
+          <input type="number" id="householdSize" value="4" min="1" max="20" aria-label="Number of people" readonly>
+          <button type="button" aria-label="Increase household size" onclick="adjustHouseholdSize(1)">+</button>
+        </div>
+        <p class="field-error">Please select a household size between 1 and 20.</p>
+      </div>
+
+      <div class="field" id="field-housetype">
+        <label class="field-label">What type of home do you live in?</label>
+        <div class="option-grid" id="houseTypeGrid" role="radiogroup" aria-label="Home type"></div>
+        <p class="field-error">Please select a home type.</p>
+      </div>
+
+      <div class="field" id="field-billknown">
+        <label class="field-label">Do you know your approximate monthly electricity bill?</label>
+        <div class="pill-group" role="radiogroup" aria-label="Do you know your bill">
+          <button type="button" class="option-card" data-value="yes" onclick="setBillKnown('yes')">Yes</button>
+          <button type="button" class="option-card" data-value="no" onclick="setBillKnown('no')">No</button>
+        </div>
+      </div>
+
+      <div class="field" id="field-billamount" style="display:none;">
+        <label class="field-label">Approximate monthly bill</label>
+        <div class="input-prefix">
+          <span>₹</span>
+          <input type="number" id="billAmount" class="text-input" placeholder="e.g. 3600" min="0" style="border:none;">
+        </div>
+        <p class="field-hint">This value is optional and only used for comparison on your results page.</p>
+        <p class="field-error">Please enter a valid positive amount.</p>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn btn-secondary" onclick="showView('intro')">← Back</button>
+        <button class="btn btn-primary" onclick="validateHousehold()">Continue →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== APPLIANCE ASSESSMENT ===================== -->
+  <section class="view" id="view-appliances">
+    <div class="container-narrow assessment-page">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Step 3 of 4</span><span>75%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:75%"></div></div>
+      </div>
+      <div class="assessment-header">
+        <h1>Your Appliances</h1>
+        <p>Tell us what appliances you use and approximately how long they operate. We'll calculate the energy consumption for you.</p>
+      </div>
+
+      <div class="appliance-list" id="applianceList"></div>
+
+      <button class="add-appliance-btn" onclick="openApplianceModal()">+ Add Appliance</button>
+
+      <p class="field-error" id="applianceListError" style="display:none; margin-top:14px;">Please add at least one appliance before continuing.</p>
+
+      <div class="step-actions">
+        <button class="btn btn-secondary" onclick="showView('household')">← Back</button>
+        <button class="btn btn-primary" onclick="validateAppliancesAndContinue()">Continue →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REVIEW ===================== -->
+  <section class="view" id="view-review">
+    <div class="container-narrow assessment-page">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Step 4 of 4</span><span>100%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+      </div>
+      <div class="assessment-header">
+        <h1>Review Your Assessment</h1>
+      </div>
+
+      <div class="review-section">
+        <h3>Household</h3>
+        <div class="card-flat" id="reviewHousehold"></div>
+      </div>
+
+      <div class="review-section">
+        <h3>Appliances</h3>
+        <div class="card-flat" id="reviewAppliances"></div>
+      </div>
+
+      <div class="review-summary" id="reviewSummary"></div>
+
+      <div class="field" style="margin-top: 24px;">
+        <label class="checkbox-row">
+          <input type="checkbox" id="consentCheckbox" onchange="toggleSubmitEnabled()">
+          I understand that this assessment provides an estimated value based on the information provided.
+        </label>
+      </div>
+
+      <div class="step-actions">
+        <button class="btn btn-secondary" onclick="showView('appliances')">← Edit</button>
+        <button class="btn btn-primary" id="submitBtn" disabled onclick="submitAssessment()">Submit Assessment</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROCESSING ===================== -->
+  <section class="view" id="view-processing">
+    <div class="processing-screen">
+      <div class="processing-bolt">⚡</div>
+      <h2>Analyzing your energy usage...</h2>
+      <ul class="processing-checklist" id="processingChecklist">
+        <li data-step="0">Processing appliance data</li>
+        <li data-step="1">Calculating energy consumption</li>
+        <li data-step="2">Comparing with reference values</li>
+        <li data-step="3">Preparing your assessment</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== RESULT ===================== -->
+  <section class="view" id="view-result">
+    <div class="container-narrow result-page">
+      <div class="result-head">
+        <span class="badge">Assessment Complete ✓</span>
+        <h1>Your Energy Assessment</h1>
+      </div>
+
+      <div class="card result-main-card">
+        <p class="eyebrow">MONTHLY ENERGY CONSUMPTION</p>
+        <div class="usage-compare">
+          <div class="col you">
+            <p class="lbl">YOUR USAGE</p>
+            <p class="val" id="resYourUsage">0 kWh</p>
+          </div>
+          <div class="col ref">
+            <p class="lbl">REFERENCE LEVEL</p>
+            <p class="val" id="resRefUsage">0 kWh</p>
+          </div>
+        </div>
+        <div class="compare-bars">
+          <div class="compare-bar-row">
+            <div class="bar-label"><span>Your usage</span><span id="resYourUsageBarLabel">0 kWh</span></div>
+            <div class="compare-bar-track"><div class="compare-bar-fill you" id="resYourBar" style="width:0%"></div></div>
+          </div>
+          <div class="compare-bar-row">
+            <div class="bar-label"><span>Reference</span><span id="resRefUsageBarLabel">0 kWh</span></div>
+            <div class="compare-bar-track"><div class="compare-bar-fill ref" id="resRefBar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div id="resStatusLine"></div>
+        <p class="diff-text" id="resDiffText"></p>
+        <p class="field-hint" id="resSourceLine" style="margin-top:14px;"></p>
+      </div>
+
+      <div class="two-col-cards">
+        <div class="card cost-card">
+          <p class="eyebrow" style="margin-bottom:4px;">ESTIMATED MONTHLY ENERGY COST</p>
+          <p class="amount" id="resCost">₹0</p>
+          <p class="note" id="resCostNote">Based on the illustrative tariff assumption used by the server. Actual bills may include slab-based tariffs, fixed charges and taxes.</p>
+          <div class="bill-compare" id="resBillCompare" style="display:none;"></div>
+        </div>
+        <div class="card" id="resSummaryCard">
+          <p class="eyebrow" style="margin-bottom:4px;">ASSESSMENT SUMMARY</p>
+          <div class="summary-list" id="resSummaryList"></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Where Is Your Energy Going?</h2>
+      <p class="section-sub">Appliance-wise breakdown, highest consumption first.</p>
+      <div class="card" id="resBreakdown"></div>
+
+      <h2 class="section-title">Suggestions For You</h2>
+      <p class="section-sub">Practical, optional ideas based on your appliance mix.</p>
+      <div id="resRecommendations"></div>
+
+      <div class="result-actions">
+        <button class="btn btn-secondary" onclick="downloadReport()">Download Assessment Report</button>
+        <button class="btn btn-secondary" onclick="restartAssessment()">Take Another Assessment</button>
+        <button class="btn btn-primary" onclick="showView('landing')">Back to Home</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Appliance picker modal -->
+<div class="modal-overlay" id="applianceModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Choose an appliance</h3>
+      <button class="modal-close" aria-label="Close" onclick="closeApplianceModal()">×</button>
+    </div>
+    <div class="appliance-option-list" id="applianceOptionList"></div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/calculations.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

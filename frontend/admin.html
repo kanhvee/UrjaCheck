@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrjaCheck Admin — Community Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===================== ADMIN LOGIN ===================== -->
+<!-- ===================== ADMIN LOGIN ===================== -->
+<div class="admin-login-page" id="loginScreen">
+  <div class="admin-login-card">
+    <div class="brand"><span class="brand-bolt">⚡</span> UrjaCheck</div>
+
+    <p class="sub">ADMIN DASHBOARD</p>
+
+    <div class="field">
+      <label class="field-label" for="adminKey">Admin Key</label>
+
+      <input
+        type="password"
+        id="adminKey"
+        class="text-input"
+        placeholder="Enter admin key"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') adminLogin()"
+      >
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="adminLogin()">
+      Login
+    </button>
+
+    <p class="login-error" id="loginError" style="display:none;">
+      Invalid admin key. Please try again.
+    </p>
+
+    <p class="field-hint" style="text-align:center; margin-top:14px;">
+      Authorized administrators only.
+    </p>
+
+    <p class="field-hint" style="text-align:center; margin-top:14px;">
+      <a href="index.html">← Back to resident site</a>
+    </p>
+  </div>
+</div>
+<!-- ===================== ADMIN APP ===================== -->
+<div id="adminApp" style="display:none;">
+
+  <header class="app-header admin-header">
+    <div class="container">
+      <div class="brand"><span class="brand-bolt">⚡</span> UrjaCheck <span class="admin-tag">ADMIN</span></div>
+      <nav class="main-nav" id="adminMainNav" aria-label="Admin navigation">
+        <button data-nav="dashboard" onclick="showAdminView('dashboard')">Dashboard</button>
+        <button data-nav="households" onclick="showAdminView('households')">Households</button>
+        <button data-nav="appliances" onclick="showAdminView('appliances')">Appliances</button>
+        <button data-nav="analytics" onclick="showAdminView('analytics')">Analytics</button>
+        <button data-nav="reports" onclick="showAdminView('reports')">Reports</button>
+      </nav>
+      <button class="logout-btn" onclick="adminLogout()">Log out</button>
+      <button class="nav-toggle" id="adminNavToggle" aria-label="Toggle menu" style="color:#fff;">☰</button>
+    </div>
+  </header>
+
+  <main class="container admin-page">
+
+    <!-- DASHBOARD -->
+    <section class="admin-view" id="admin-view-dashboard">
+      <div class="admin-page-head">
+        <h1>Community Energy Overview</h1>
+      </div>
+
+      <div class="stat-grid" id="dashboardStats"></div>
+
+      <div class="card chart-card" id="dashboardChartCard">
+        <h3>Community Consumption</h3>
+        <p class="sub">Average actual vs. reference consumption across all stored assessments.</p>
+        <div class="compare-bars" id="communityCompareBars"></div>
+      </div>
+
+      <div class="empty-state" id="dashboardEmpty" style="display:none;">
+        <span class="icon">📭</span>No assessments have been submitted yet. Once residents complete an assessment, community statistics will appear here.
+      </div>
+    </section>
+
+    <!-- HOUSEHOLDS -->
+    <section class="admin-view" id="admin-view-households">
+      <div class="admin-page-head">
+        <h1>Household Data</h1>
+      </div>
+      <div class="card">
+        <div class="table-toolbar">
+          <input type="text" class="text-input" id="householdSearch" placeholder="Search assessment ID..." oninput="renderHouseholdTable()">
+          <select class="text-input" id="statusFilter" onchange="renderHouseholdTable()">
+            <option value="all">All statuses</option>
+            <option value="within">Within Reference</option>
+            <option value="moderate">Moderately Above</option>
+            <option value="significant">Significantly Above</option>
+          </select>
+          <select class="text-input" id="sortBy" onchange="renderHouseholdTable()">
+            <option value="consumption_desc">Sort: Consumption (high–low)</option>
+            <option value="consumption_asc">Sort: Consumption (low–high)</option>
+            <option value="id">Sort: Assessment ID</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Assessment ID</th><th>People</th><th>House Type</th>
+                <th>Monthly kWh</th><th>Reference kWh</th><th>Difference</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="householdTableBody"></tbody>
+          </table>
+        </div>
+        <div id="householdTableEmpty" class="empty-state" style="display:none;">
+          <span class="icon">🔍</span>No assessments found.
+        </div>
+      </div>
+    </section>
+
+    <!-- HOUSEHOLD DETAIL -->
+    <section class="admin-view" id="admin-view-household-detail">
+      <button class="btn btn-secondary household-detail-back" onclick="showAdminView('households')">← Back to Households</button>
+      <div id="householdDetailContent"></div>
+    </section>
+
+    <!-- APPLIANCE ANALYTICS -->
+    <section class="admin-view" id="admin-view-appliances">
+      <div class="admin-page-head">
+        <h1>Community Appliance Consumption</h1>
+      </div>
+      <div class="card" style="margin-bottom:24px;">
+        <h3>Consumption share by appliance</h3>
+        <p class="sub">Percentage of total community energy consumption.</p>
+        <div class="hbar-list" id="applianceShareChart"></div>
+      </div>
+      <div class="card">
+        <h3>Most common appliances</h3>
+        <p class="sub">Number of households reporting each appliance.</p>
+        <table class="mini-table" id="commonAppliancesTable"></table>
+      </div>
+    </section>
+
+    <!-- BENCHMARK ANALYTICS -->
+    <section class="admin-view" id="admin-view-analytics">
+      <div class="admin-page-head">
+        <h1>Households vs Reference Level</h1>
+      </div>
+      <div class="benchmark-cards" id="benchmarkCards"></div>
+      <div class="card">
+        <h3>Community averages</h3>
+        <div class="summary-list" id="benchmarkAverages"></div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="admin-view" id="admin-view-reports">
+      <div class="admin-page-head">
+        <h1>Reports</h1>
+      </div>
+      <p class="section-sub">Export or print the current community dataset.</p>
+      <div class="reports-grid">
+        <div class="card report-btn-card">
+          <span class="icon">📤</span>
+          <h3>Export CSV</h3>
+          <p class="field-hint" style="margin-bottom:16px;">Download the current household dataset as a CSV file.</p>
+          <button class="btn btn-primary btn-block" onclick="exportCSV()">Export CSV</button>
+        </div>
+        <div class="card report-btn-card">
+          <span class="icon">🖨️</span>
+          <h3>Print Summary</h3>
+          <p class="field-hint" style="margin-bottom:16px;">Open the browser print dialog for this dashboard.</p>
+          <button class="btn btn-secondary btn-block" onclick="window.print()">Print Summary</button>
+        </div>
+        <div class="card report-btn-card">
+          <span class="icon">📄</span>
+          <h3>Generate Community Report</h3>
+          <p class="field-hint" style="margin-bottom:16px;">Create a downloadable text summary of community energy use.</p>
+          <button class="btn btn-secondary btn-block" onclick="generateCommunityReport()">Generate Report</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-note">UrjaCheck Admin • Live data from stored assessments. No personally identifying resident information is stored or displayed.</p>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/calculations.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
