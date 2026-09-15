@@ -20,15 +20,14 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOriginPatterns(
-        "http://localhost:*",
-        "http://127.0.0.1:*",
-        "https://urja-check.vercel.app"
-)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(false)
-                .maxAge(3600);
-    }
-}
+registry.addMapping("/api/**")
+        .allowedOriginPatterns(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://urja-check.vercel.app",
+                "https://*.vercel.app"
+        )
+        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        .allowedHeaders("*")
+        .allowCredentials(false)
+        .maxAge(3600);
