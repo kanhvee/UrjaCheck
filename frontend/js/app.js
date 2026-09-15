@@ -183,24 +183,17 @@ function removeAppliance(id) {
   renderApplianceCards();
 }
 
+
 function updateApplianceField(id, field, value) {
   const item = state.appliances.find(a => a.id === id);
   if (!item) return;
+
   if (field === "quantity") item.quantity = parseInt(value, 10) || 0;
   if (field === "powerWatts") item.powerWatts = parseFloat(value) || 0;
   if (field === "operatingHours") item.operatingHours = parseFloat(value) || 0;
-  renderApplianceCards(id);
 }
 
-function toggleUnknownPower(id, checked) {
-  const item = state.appliances.find(a => a.id === id);
-  if (!item) return;
-  item.unknownPower = checked;
-  if (checked) {
-    item.powerWatts = APPLIANCE_CATALOG[item.applianceType].defaultPower;
-  }
-  renderApplianceCards();
-}
+
 
 function applianceValidation(item) {
   const errors = [];
@@ -242,8 +235,9 @@ function renderApplianceCards() {
         <div class="mini-field">
           <label for="pow-${item.id}">Power rating</label>
           <div class="unit-input">
-            <input type="number" id="pow-${item.id}" min="1" value="${item.powerWatts}" ${item.unknownPower ? "disabled" : ""}
-              oninput="updateApplianceField(${item.id}, 'powerWatts', this.value)">
+
+<input type="number" id="pow-${item.id}" min="1" value="${item.powerWatts}" readonly>
+
             <span>W</span>
           </div>
         </div>
@@ -257,10 +251,9 @@ function renderApplianceCards() {
         </div>
       </div>
       <p class="power-info-hint">ⓘ Typical power rating: ${cat.defaultPower} W. You can change this if you know the appliance's actual rating.</p>
-      <label class="checkbox-row unknown-power-row">
-        <input type="checkbox" ${item.unknownPower ? "checked" : ""} onchange="toggleUnknownPower(${item.id}, this.checked)">
-        I don't know the exact power rating
-      </label>
+
+
+
       <div class="unknown-power-note${item.unknownPower ? " show" : ""}">We'll use a typical reference value for this appliance.</div>
       ${errors.length ? `<p class="field-error" style="display:block;">${errors[0]}</p>` : ""}
       <div class="live-calc">
@@ -580,42 +573,395 @@ function renderResults(a) {
 function downloadReport() {
   const a = state.lastAssessment;
   if (!a) return;
-  const lines = [
-    "UrjaCheck — Energy Assessment Report",
-    "Assessment ID: " + a.assessmentId,
-    "Generated: " + (a.timestamp ? new Date(a.timestamp).toLocaleString() : new Date().toLocaleString()),
-    "",
-    "HOUSEHOLD",
-    `People: ${a.householdSize}`,
-    `Home type: ${a.houseType}`,
-    a.actualBill ? `Reported bill: ₹${a.actualBill}` : "",
-    "",
-    "APPLIANCES",
-    ...a.appliances.map(i => `${i.quantity} × ${i.applianceType} — ${i.operatingHours} h/day — ${i.monthlyEnergyKWh} kWh/month`),
-    "",
-    "RESULTS",
-    `Estimated daily consumption: ${a.totalDailyEnergyKWh} kWh/day`,
-    `Estimated monthly consumption: ${a.totalMonthlyEnergyKWh} kWh/month`,
-    `Reference monthly consumption: ${a.totalReferenceEnergyKWh} kWh/month`,
-    `Estimated monthly cost: ₹${a.estimatedMonthlyCost} (illustrative tariff ₹${a.tariff || DEFAULT_TARIFF}/kWh)`,
-    `Difference from reference: ${a.percentageDifference}%`,
-    `Status: ${STATUS_LABELS[a.status] || a.status}`,
-    "",
-    "This report provides an estimated assessment based on the information entered.",
-    "The reference level is a benchmark for awareness and comparison, not a compliance test.",
-    "Intended for awareness and educational purposes only."
-  ].filter(Boolean).join("\n");
 
-  const blob = new Blob([lines], { type: "text/plain" });
+  const generated = a.timestamp
+    ? new Date(a.timestamp).toLocaleString()
+    : new Date().toLocaleString();
+
+  const statusLabel = STATUS_LABELS[a.status] || a.status || "Not available";
+
+  const applianceRows = (a.appliances || []).map(i => `
+    <tr>
+      <td>${i.quantity}</td>
+      <td>${i.applianceType}</td>
+      <td>${i.operatingHours} h/day</td>
+      <td>${Number(i.monthlyEnergyKWh || 0).toFixed(1)} kWh</td>
+    </tr>
+  `).join("");
+
+  const percentage = Number(a.percentageDifference || 0);
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UrjaCheck Energy Assessment</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+      color: #1f2937;
+      background: #f3f4f6;
+    }
+
+    .report {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      margin-top: 32px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 30px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .value {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .comparison {
+      margin-top: 20px;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .bar {
+      height: 18px;
+      background: #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .actual-bar {
+      height: 100%;
+      width: ${Math.min(
+        100,
+        Math.max(
+          5,
+          (Number(a.totalMonthlyEnergyKWh || 0) /
+            Math.max(Number(a.totalReferenceEnergyKWh || 1), 1)) * 100
+        )
+      )}%;
+      background: #2563eb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      background: #f3f4f6;
+    }
+
+    .note {
+      margin-top: 30px;
+      padding: 16px;
+      background: #f9fafb;
+      border-left: 4px solid #6b7280;
+    }
+
+    .print-button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .report {
+        max-width: none;
+        padding: 20px;
+      }
+
+      .print-button {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      .report {
+        padding: 20px;
+      }
+
+      .summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="report">
+
+  <button class="print-button" onclick="window.print()">
+    Print / Save as PDF
+  </button>
+
+  <h1>UrjaCheck</h1>
+  <div class="subtitle">Household Energy Assessment Report</div>
+
+  <p>
+    <strong>Assessment ID:</strong> ${a.assessmentId}
+  </p>
+
+  <p>
+    <strong>Generated:</strong> ${generated}
+  </p>
+
+  <h2>Household Information</h2>
+
+  <div class="summary">
+    <div class="card">
+      <div class="label">Household Size</div>
+      <div class="value">${a.householdSize}</div>
+      <div>people</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Home Type</div>
+      <div class="value">${a.houseType}</div>
+    </div>
+
+    ${
+      a.actualBill
+        ? `
+        <div class="card">
+          <div class="label">Reported Electricity Bill</div>
+          <div class="value">₹${a.actualBill}</div>
+        </div>
+        `
+        : ""
+    }
+  </div>
+
+  <h2>Energy Consumption</h2>
+
+  <div class="summary">
+
+    <div class="card">
+      <div class="label">Estimated Daily Consumption</div>
+      <div class="value">
+        ${Number(a.totalDailyEnergyKWh || 0).toFixed(2)} kWh
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Estimated Monthly Consumption</div>
+      <div class="value">
+        ${Number(a.totalMonthlyEnergyKWh || 0).toFixed(1)} kWh
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Reference Monthly Consumption</div>
+      <div class="value">
+        ${Number(a.totalReferenceEnergyKWh || 0).toFixed(1)} kWh
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">Estimated Monthly Cost</div>
+      <div class="value">
+        ₹${Number(a.estimatedMonthlyCost || 0).toFixed(0)}
+      </div>
+
+      <div>
+        Illustrative tariff:
+        ₹${a.tariff || DEFAULT_TARIFF}/kWh
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Reference Comparison</h2>
+
+  <div class="comparison">
+
+    <div class="bar-label">
+      <span>Actual consumption</span>
+      <strong>
+        ${Number(a.totalMonthlyEnergyKWh || 0).toFixed(1)} kWh/month
+      </strong>
+    </div>
+
+    <div class="bar">
+      <div class="actual-bar"></div>
+    </div>
+
+    <div class="bar-label">
+      <span>Reference level</span>
+      <strong>
+        ${Number(a.totalReferenceEnergyKWh || 0).toFixed(1)} kWh/month
+      </strong>
+    </div>
+
+    <p>
+      Difference from reference:
+      <strong>${percentage.toFixed(1)}%</strong>
+    </p>
+
+    <p>
+      Assessment status:
+      <span class="status">${statusLabel}</span>
+    </p>
+
+  </div>
+
+  <h2>Appliance-wise Consumption</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Quantity</th>
+        <th>Appliance</th>
+        <th>Operating Hours</th>
+        <th>Monthly Consumption</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      ${applianceRows || `
+        <tr>
+          <td colspan="4">No appliance data available.</td>
+        </tr>
+      `}
+    </tbody>
+  </table>
+
+  <h2>Methodology</h2>
+
+  <div class="note">
+
+    <p>
+      This assessment estimates household electricity consumption using
+      appliance quantity, typical power estimates and reported operating
+      hours.
+    </p>
+
+    <p>
+      Reference values are used as benchmarks for awareness and comparison.
+      Where applicable, UrjaCheck uses parameters published by the
+      Bureau of Energy Efficiency (BEE). These parameters should not be
+      interpreted as a universal "ideal household usage" or as a
+      compliance limit.
+    </p>
+
+    <p>
+      For appliances where a directly comparable government benchmark is
+      not available, a project reference value is used.
+    </p>
+
+    <p>
+      Electricity cost is illustrative and depends on the applicable
+      electricity tariff and billing structure.
+    </p>
+
+  </div>
+
+  <h2>Conclusion</h2>
+
+  <p>
+    This report is intended to help households understand their electricity
+    consumption, identify major energy-consuming appliances and compare
+    their estimated usage with a reference benchmark.
+  </p>
+
+  <p>
+    <strong>UrjaCheck is intended for awareness and educational purposes
+    and is not a regulatory or compliance assessment.</strong>
+  </p>
+
+</div>
+
+</body>
+</html>
+  `;
+
+  const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
+
   const link = document.createElement("a");
   link.href = url;
-  link.download = `UrjaCheck-Report-${a.assessmentId}.txt`;
+  link.download = `UrjaCheck-Assessment-${a.assessmentId}.html`;
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+
   URL.revokeObjectURL(url);
-  showToast("Report downloaded.");
+
+  showToast("Assessment report downloaded.");
 }
 
 /* ---------------- Toast ---------------- */
