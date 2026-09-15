@@ -46,9 +46,16 @@ public ResponseEntity<ApiErrorResponse> handleResponseStatus(ResponseStatusExcep
 }
 
     // Anything else -> 500, without leaking internals to the client
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex) {
-        ApiErrorResponse body = new ApiErrorResponse("An unexpected error occurred. Please try again.");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
-    }
+@ExceptionHandler(Exception.class)
+public ResponseEntity<ApiErrorResponse> handleGeneric(Exception ex) {
+
+    ex.printStackTrace();
+
+    ApiErrorResponse body =
+            new ApiErrorResponse("An unexpected error occurred. Please try again.");
+
+    return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(body);
+}
 }
