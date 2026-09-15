@@ -25,7 +25,7 @@ const APPLIANCE_CATALOG = {
   "Table Fan":           { icon: "🌀", defaultPower: 50,   referenceHours: 6,  category: "Cooling" },
   "Air Conditioner":     { icon: "❄️", defaultPower: 1500, referenceHours: 4,  category: "Cooling" },
   "Air Cooler":          { icon: "🧊", defaultPower: 200,  referenceHours: 5,  category: "Cooling" },
-  "Refrigerator":        { icon: "🧊", defaultPower: 200,  referenceHours: 10, category: "Kitchen" },
+  "Refrigerator":        { icon: "🧊", defaultPower: 200,  referenceHours: 24, category: "Kitchen" },
   "Television":          { icon: "📺", defaultPower: 100,  referenceHours: 3,  category: "Entertainment" },
   "Computer/Laptop":     { icon: "💻", defaultPower: 100,  referenceHours: 5,  category: "Electronics" },
   "Washing Machine":     { icon: "🧺", defaultPower: 500,  referenceHours: 1,  category: "Laundry" },
